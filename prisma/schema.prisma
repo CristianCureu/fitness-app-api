@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  CLIENT
+  TRAINER
+}
+
+enum ClientStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model AppUser {
+  id     String   @id @default(uuid()) @db.Uuid
+  authId String   @unique @db.Uuid // Supabase auth.users.id
+  role   UserRole
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  clientProfile     ClientProfile?
+  trainerClients    ClientProfile[]    @relation("TrainerClients")
+  scheduledSessions ScheduledSession[] @relation("TrainerSessions")
+
+  @@map("app_users")
+}
+
+model ClientProfile {
+  id     String  @id @default(uuid()) @db.Uuid
+  userId String  @unique @db.Uuid // 1-to-1 with AppUser
+  user   AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  trainerId String  @db.Uuid
+  trainer   AppUser @relation("TrainerClients", fields: [trainerId], references: [id])
+
+  firstName String
+  lastName  String
+  timezone  String @default("UTC") // IANA timezone (e.g., "America/New_York")
+
+  // Physical attributes
+  age    Int?
+  height Float? // in cm
+  weight Float? // in kg
+
+  goalDescription            String? // "-8kg in 3 months"
+  status                     ClientStatus @default(ACTIVE)
+  programStartDate           DateTime?
+  programWeeks               Int?
+  recommendedSessionsPerWeek Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  scheduledSessions    ScheduledSession[]
+  dailyRecommendations DailyRecommendation[]
+  checkins             DailyCheckin[]
+  nutritionGoals       NutritionGoal[]
+
+  @@index([trainerId])
+  @@map("client_profiles")
+}
+
+model ScheduledSession {
+  id String @id @default(uuid()) @db.Uuid
+
+  clientId String        @db.Uuid
+  client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  trainerId String  @db.Uuid
+  trainer   AppUser @relation("TrainerSessions", fields: [trainerId], references: [id])
+
+  sessionName String // ex: "Upper Body A"
+  sessionType String? // ex: "UPPER", "FULL_BODY" etc. (can become enum later)
+
+  startAt DateTime
+  endAt   DateTime?
+
+  status          SessionStatus @default(SCHEDULED)
+  autoRecommended Boolean       @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId, startAt])
+  @@map("scheduled_sessions")
+}
+
+model DailyRecommendation {
+  id String @id @default(uuid()) @db.Uuid
+
+  clientId String        @db.Uuid
+  client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  date      DateTime // only the date part is relevant
+  focusText String // "Focus of the day"
+  tipsText  String? // 1–2 tips concatenated into one string
+
+  hasWorkoutToday Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, date])
+  @@index([date])
+  @@map("daily_recommendations")
+}
+
+model DailyCheckin {
+  id String @id @default(uuid()) @db.Uuid
+
+  clientId String        @db.Uuid
+  client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  date           DateTime
+  nutritionScore Int // slider 0–10
+  painAtTraining Boolean
+  note           String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([clientId, date])
+  @@index([date])
+  @@map("daily_checkins")
+}
+
+model NutritionGoal {
+  id String @id @default(uuid()) @db.Uuid
+
+  clientId String        @db.Uuid
+  client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  weekStartDate       DateTime
+  proteinTargetPerDay Int
+  waterTargetMlPerDay Int
+  weeklyFocus         String // phrase shown in the "You" tab
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId, weekStartDate])
+  @@map("nutrition_goals")
+}
