@@ -14,6 +14,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { SkipOnboardingCheck } from '../common/decorators/skip-onboarding-check.decorator';
 import { UserRole } from '@prisma/client';
 import type { AppUser } from '@prisma/client';
 
@@ -26,6 +27,7 @@ export class UsersController {
    * Public endpoint - called after Supabase login
    */
   @Post('auth/register')
+  @SkipOnboardingCheck() // Allow registration even without onboarding
   async register(@Body() dto: RegisterUserDto) {
     return this.usersService.register(dto);
   }

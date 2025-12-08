@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { SupabaseModule } from './supabase/supabase.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -10,6 +11,9 @@ import { TodayModule } from './today/today.module';
 import { CheckinsModule } from './checkins/checkins.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { NutritionModule } from './nutrition/nutrition.module';
+import { InvitesModule } from './invites/invites.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
+import { OnboardingCompletedGuard } from './common/guards/onboarding-completed.guard';
 
 @Module({
   imports: [
@@ -26,8 +30,15 @@ import { NutritionModule } from './nutrition/nutrition.module';
     CheckinsModule,
     RecommendationsModule,
     NutritionModule,
+    InvitesModule,
+    OnboardingModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: OnboardingCompletedGuard,
+    },
+  ],
 })
 export class AppModule { }

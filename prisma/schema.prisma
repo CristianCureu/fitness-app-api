@@ -42,8 +42,11 @@ model AppUser {
 
   // Relations
   clientProfile     ClientProfile?
+  trainerProfile    TrainerProfile?
   trainerClients    ClientProfile[]    @relation("TrainerClients")
   scheduledSessions ScheduledSession[] @relation("TrainerSessions")
+  createdInvites    InviteCode[]       @relation("TrainerInvites")
+  usedInvite        InviteCode?        @relation("UsedInvite")
 
   @@map("app_users")
 }
@@ -71,6 +74,10 @@ model ClientProfile {
   programWeeks               Int?
   recommendedSessionsPerWeek Int?
 
+  // Onboarding tracking
+  onboardingCompleted   Boolean   @default(false)
+  onboardingCompletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -82,6 +89,21 @@ model ClientProfile {
 
   @@index([trainerId])
   @@map("client_profiles")
+}
+
+model TrainerProfile {
+  id     String  @id @default(uuid()) @db.Uuid
+  userId String  @unique @db.Uuid // 1-to-1 with AppUser
+  user   AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstName String
+  lastName  String
+  bio       String? // Optional bio/description
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("trainer_profiles")
 }
 
 model ScheduledSession {
@@ -162,4 +184,30 @@ model NutritionGoal {
 
   @@index([clientId, weekStartDate])
   @@map("nutrition_goals")
+}
+
+model InviteCode {
+  id   String @id @default(uuid()) @db.Uuid
+  code String @unique // "TRAIN-ABC123"
+
+  trainerId String  @db.Uuid
+  trainer   AppUser @relation("TrainerInvites", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  // Optional pre-fill data
+  clientEmail     String?
+  clientFirstName String?
+  clientLastName  String?
+
+  // Status
+  used         Boolean   @default(false)
+  usedByUserId String?   @unique @db.Uuid
+  usedBy       AppUser?  @relation("UsedInvite", fields: [usedByUserId], references: [id])
+  usedAt       DateTime?
+
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([trainerId])
+  @@index([code])
+  @@map("invite_codes")
 }
