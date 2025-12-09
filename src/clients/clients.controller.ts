@@ -16,7 +16,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateClientProfileDto } from './dto/create-client-profile.dto';
 import { UpdateClientProfileDto } from './dto/update-client-profile.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { GetClientsQueryDto } from './dto/get-clients-query.dto';
 import { UserRole } from '@prisma/client';
 import type { AppUser } from '@prisma/client';
 
@@ -46,9 +46,9 @@ export class ClientsController {
   @Roles(UserRole.TRAINER)
   async findAll(
     @CurrentUser() user: AppUser,
-    @Query() pagination: PaginationDto,
+    @Query() query: GetClientsQueryDto,
   ) {
-    return this.clientsService.findAll(user.id, pagination);
+    return this.clientsService.findAll(user.id, query);
   }
 
   /**

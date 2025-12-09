@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsDateString, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsBoolean, IsEnum } from 'class-validator';
+import { SessionStatus } from '@prisma/client';
 
 export class CreateSessionDto {
   @IsString()
@@ -21,4 +22,8 @@ export class CreateSessionDto {
   @IsOptional()
   @IsBoolean()
   autoRecommended?: boolean;
+
+  @IsOptional()
+  @IsEnum(SessionStatus)
+  status?: SessionStatus;
 }

@@ -7,12 +7,12 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientProfileDto } from './dto/create-client-profile.dto';
 import { UpdateClientProfileDto } from './dto/update-client-profile.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { GetClientsQueryDto } from './dto/get-clients-query.dto';
 import type { AppUser } from '@prisma/client';
 
 @Injectable()
 export class ClientsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Create a new client profile
@@ -80,14 +80,31 @@ export class ClientsService {
   }
 
   /**
-   * Get all clients for a trainer with pagination
+   * Get all clients for a trainer with pagination, filtering, and search
    */
-  async findAll(trainerId: string, pagination: PaginationDto) {
-    const { offset = 0, limit = 50 } = pagination;
+  async findAll(trainerId: string, query: GetClientsQueryDto) {
+    const { offset = 0, limit = 50, search, status, onboardingCompleted } = query;
 
-    const [clients, total] = await Promise.all([
+    const where: any = { trainerId };
+
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (onboardingCompleted !== undefined) {
+      where.onboardingCompleted = onboardingCompleted;
+    }
+
+    const [data, total] = await Promise.all([
       this.prisma.clientProfile.findMany({
-        where: { trainerId },
+        where,
         skip: offset,
         take: limit,
         include: {
@@ -105,12 +122,12 @@ export class ClientsService {
         },
       }),
       this.prisma.clientProfile.count({
-        where: { trainerId },
+        where,
       }),
     ]);
 
     return {
-      clients,
+      data,
       total,
       offset,
       limit,

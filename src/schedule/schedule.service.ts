@@ -12,7 +12,7 @@ import type { AppUser } from '@prisma/client';
 
 @Injectable()
 export class ScheduleService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Create a new scheduled session
@@ -106,7 +106,7 @@ export class ScheduleService {
       where.status = status;
     }
 
-    const [sessions, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       this.prisma.scheduledSession.findMany({
         where,
         skip: offset,
@@ -128,7 +128,7 @@ export class ScheduleService {
     ]);
 
     return {
-      sessions,
+      data,
       total,
       offset,
       limit,
@@ -201,7 +201,7 @@ export class ScheduleService {
       updateData.endAt = new Date(dto.endAt as string);
     }
 
-    return this.prisma.scheduledSession.update({
+    const updatedSession = await this.prisma.scheduledSession.update({
       where: { id },
       data: updateData,
       include: {
@@ -214,6 +214,8 @@ export class ScheduleService {
         },
       },
     });
+
+    return updatedSession;
   }
 
   /**
