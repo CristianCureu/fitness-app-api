@@ -193,12 +193,12 @@ export class ScheduleService {
     }
 
     // Handle date conversions
-    const updateData: any = { ...dto };
+    const updateData: UpdateSessionDto = { ...dto };
     if ('startAt' in dto && dto.startAt) {
-      updateData.startAt = new Date(dto.startAt as string);
+      updateData.startAt = new Date(dto.startAt).toISOString();
     }
     if ('endAt' in dto && dto.endAt) {
-      updateData.endAt = new Date(dto.endAt as string);
+      updateData.endAt = new Date(dto.endAt).toISOString();
     }
 
     const updatedSession = await this.prisma.scheduledSession.update({

@@ -47,6 +47,7 @@ model AppUser {
   scheduledSessions ScheduledSession[] @relation("TrainerSessions")
   createdInvites    InviteCode[]       @relation("TrainerInvites")
   usedInvite        InviteCode?        @relation("UsedInvite")
+  createdPrograms   WorkoutProgram[]   @relation("TrainerPrograms")
 
   @@map("app_users")
 }
@@ -86,6 +87,8 @@ model ClientProfile {
   dailyRecommendations DailyRecommendation[]
   checkins             DailyCheckin[]
   nutritionGoals       NutritionGoal[]
+  activeProgram        ClientProgram?
+  recommendationLogs   ProgramRecommendationLog[]
 
   @@index([trainerId])
   @@map("client_profiles")
@@ -210,4 +213,109 @@ model InviteCode {
   @@index([trainerId])
   @@index([code])
   @@map("invite_codes")
+}
+
+// ============================================
+// WORKOUT PROGRAMS
+// ============================================
+
+model WorkoutProgram {
+  id              String  @id @default(uuid()) @db.Uuid
+
+  // NULL = program default (seed), altfel = program custom trainer
+  trainerId       String? @db.Uuid
+  trainer         AppUser? @relation("TrainerPrograms", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  name            String
+  description     String?
+  sessionsPerWeek Int
+  durationWeeks   Int?
+
+  isDefault       Boolean @default(false) // true pentru programe seed
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sessions        ProgramSession[]
+  clientPrograms  ClientProgram[]
+  recommendedIn   ProgramRecommendationLog[] @relation("RecommendedProgram")
+  selectedIn      ProgramRecommendationLog[] @relation("SelectedProgram")
+
+  @@index([trainerId])
+  @@index([isDefault])
+  @@map("workout_programs")
+}
+
+model ProgramSession {
+  id         String @id @default(uuid()) @db.Uuid
+  programId  String @db.Uuid
+  program    WorkoutProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  dayNumber  Int    // 1, 2, 3, 4
+  name       String // "Upper Body A"
+  focus      String // "UPPER", "LOWER", "FULL_BODY", "PUSH", "PULL", "LEGS"
+  notes      String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([programId])
+  @@map("program_sessions")
+}
+
+model ClientProgram {
+  id              String @id @default(uuid()) @db.Uuid
+  clientId        String @unique @db.Uuid // un client are doar 1 program activ
+  client          ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  programId       String @db.Uuid
+  program         WorkoutProgram @relation(fields: [programId], references: [id])
+
+  startDate       DateTime
+  endDate         DateTime?
+  active          Boolean @default(true)
+
+  // Zilele săptămânii când se antrenează
+  trainingDays    Json // ["MONDAY", "WEDNESDAY", "FRIDAY", "SATURDAY"]
+
+  // Dacă e personalizat pentru acest client (clonare)
+  isCustomized    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([programId])
+  @@map("client_programs")
+}
+
+model ProgramRecommendationLog {
+  id        String @id @default(uuid()) @db.Uuid
+  clientId  String @db.Uuid
+  client    ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Recommendation details
+  recommendedProgramId String @db.Uuid
+  recommendedProgram   WorkoutProgram @relation("RecommendedProgram", fields: [recommendedProgramId], references: [id])
+
+  score               Float
+  confidence          String // HIGH, MEDIUM, LOW
+  reasons             Json   // array of reasons
+  warnings            Json?  // array of warnings
+
+  // Context at time of recommendation
+  clientStats         Json   // completion rate, consistency, etc.
+
+  // Trainer action
+  trainerAccepted     Boolean?
+  trainerSelectedProgramId String? @db.Uuid
+  trainerSelectedProgram   WorkoutProgram? @relation("SelectedProgram", fields: [trainerSelectedProgramId], references: [id])
+  trainerFeedback     String? @db.Text
+  actionTakenAt       DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId, createdAt])
+  @@map("program_recommendation_logs")
 }

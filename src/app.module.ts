@@ -13,6 +13,7 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
 import { NutritionModule } from './nutrition/nutrition.module';
 import { InvitesModule } from './invites/invites.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
+import { ProgramsModule } from './programs/programs.module';
 import { OnboardingCompletedGuard } from './common/guards/onboarding-completed.guard';
 
 @Module({
@@ -32,6 +33,7 @@ import { OnboardingCompletedGuard } from './common/guards/onboarding-completed.g
     NutritionModule,
     InvitesModule,
     OnboardingModule,
+    ProgramsModule,
   ],
   controllers: [],
   providers: [
