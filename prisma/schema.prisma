@@ -28,6 +28,27 @@ enum SessionStatus {
   NO_SHOW
 }
 
+enum ExerciseCategory {
+  SQUAT
+  LUNGE
+  HINGE
+  HORIZONTAL_PUSH
+  HORIZONTAL_PULL
+  VERTICAL_PUSH
+  VERTICAL_PULL
+  GLUTES_HAMSTRINGS
+  CORE
+  FULL_BODY_POWER
+  CARDIO_CONDITIONING
+  OTHER
+}
+
+enum ExerciseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
 // ============================================
 // MODELS
 // ============================================
@@ -48,6 +69,7 @@ model AppUser {
   createdInvites    InviteCode[]       @relation("TrainerInvites")
   usedInvite        InviteCode?        @relation("UsedInvite")
   createdPrograms   WorkoutProgram[]   @relation("TrainerPrograms")
+  createdExercises  Exercise[]         @relation("TrainerExercises")
 
   @@map("app_users")
 }
@@ -260,6 +282,9 @@ model ProgramSession {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
+  sessionExercises SessionExercise[]
+
   @@index([programId])
   @@map("program_sessions")
 }
@@ -318,4 +343,64 @@ model ProgramRecommendationLog {
 
   @@index([clientId, createdAt])
   @@map("program_recommendation_logs")
+}
+
+// ============================================
+// EXERCISES
+// ============================================
+
+model Exercise {
+  id          String @id @default(uuid()) @db.Uuid
+
+  name        String // "Bodyweight Squat"
+  description String @db.Text
+  howTo       Json   // array of strings - pașii cum se execută
+  cues        Json   // array of strings - indicații tehnice
+  mistakes    Json   // array of strings - greșeli comune
+
+  category    ExerciseCategory
+  equipment   Json              // array: ["BODYWEIGHT", "DUMBBELL", "BARBELL"]
+  difficulty  ExerciseDifficulty
+
+  // NULL = exercițiu default (seed), altfel = exercițiu custom trainer
+  isDefault   Boolean  @default(false)
+  trainerId   String?  @db.Uuid
+  trainer     AppUser? @relation("TrainerExercises", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sessionExercises SessionExercise[]
+
+  @@index([category, difficulty])
+  @@index([trainerId])
+  @@index([isDefault])
+  @@map("exercises")
+}
+
+model SessionExercise {
+  id        String @id @default(uuid()) @db.Uuid
+
+  sessionId String @db.Uuid
+  session   ProgramSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  exerciseId String @db.Uuid
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  // Detalii despre cum se face exercițiul în această sesiune specifică
+  orderInSession Int     // ordinea în care apare în sesiune (1, 2, 3...)
+  sets           Int     // 3 seturi
+  reps           String? // "8-12" sau "10" sau "AMRAP" sau "30 sec"
+  restSeconds    Int?    // 60 secunde pauză între serii
+  tempo          String? // "3-1-1-0" (eccentric-pauză-concentric-pauză)
+  notes          String? @db.Text // "Focus on form" sau alte indicații specifice
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sessionId, exerciseId, orderInSession])
+  @@index([sessionId])
+  @@index([exerciseId])
+  @@map("session_exercises")
 }

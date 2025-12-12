@@ -80,6 +80,16 @@ export class ProgramsService {
           orderBy: {
             dayNumber: 'asc',
           },
+          include: {
+            sessionExercises: {
+              orderBy: {
+                orderInSession: 'asc',
+              },
+              include: {
+                exercise: true,
+              },
+            },
+          },
         },
         _count: {
           select: {
@@ -103,6 +113,16 @@ export class ProgramsService {
         sessions: {
           orderBy: {
             dayNumber: 'asc',
+          },
+          include: {
+            sessionExercises: {
+              orderBy: {
+                orderInSession: 'asc',
+              },
+              include: {
+                exercise: true,
+              },
+            },
           },
         },
         trainer: {

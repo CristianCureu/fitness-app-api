@@ -15,6 +15,7 @@ import { InvitesModule } from './invites/invites.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { ProgramsModule } from './programs/programs.module';
 import { OnboardingCompletedGuard } from './common/guards/onboarding-completed.guard';
+import { ExercisesModule } from './exercises/exercises.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { OnboardingCompletedGuard } from './common/guards/onboarding-completed.g
     InvitesModule,
     OnboardingModule,
     ProgramsModule,
+    ExercisesModule,
   ],
   controllers: [],
   providers: [
