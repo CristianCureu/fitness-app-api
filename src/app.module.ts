@@ -16,6 +16,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
 import { ProgramsModule } from './programs/programs.module';
 import { OnboardingCompletedGuard } from './common/guards/onboarding-completed.guard';
 import { ExercisesModule } from './exercises/exercises.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ExercisesModule } from './exercises/exercises.module';
     OnboardingModule,
     ProgramsModule,
     ExercisesModule,
+    AiModule,
   ],
   controllers: [],
   providers: [

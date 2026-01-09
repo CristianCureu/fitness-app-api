@@ -49,6 +49,18 @@ enum ExerciseDifficulty {
   ADVANCED
 }
 
+enum NutritionTipScope {
+  GLOBAL
+  CLIENT
+  OBJECTIVE
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+}
+
 // ============================================
 // MODELS
 // ============================================
@@ -109,6 +121,8 @@ model ClientProfile {
   dailyRecommendations DailyRecommendation[]
   checkins             DailyCheckin[]
   nutritionGoals       NutritionGoal[]
+  nutritionSettings    NutritionSettings?
+  nutritionTips        NutritionTip[]
   activeProgram        ClientProgram?
   recommendationLogs   ProgramRecommendationLog[]
 
@@ -148,6 +162,10 @@ model ScheduledSession {
 
   status          SessionStatus @default(SCHEDULED)
   autoRecommended Boolean       @default(false)
+
+  // Completion tracking
+  completedAt DateTime?
+  notes       String?   @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -209,6 +227,57 @@ model NutritionGoal {
 
   @@index([clientId, weekStartDate])
   @@map("nutrition_goals")
+}
+
+model NutritionSettings {
+  id String @id @default(uuid()) @db.Uuid
+
+  clientId String        @unique @db.Uuid
+  client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  objective           String?
+  proteinTargetPerDay Int
+  waterTargetMlPerDay Int
+  weeklyGoal1         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("nutrition_settings")
+}
+
+model NutritionTip {
+  id String @id @default(uuid()) @db.Uuid
+
+  scope    NutritionTipScope
+  text     String           @db.Text
+  goalTag  String?
+
+  clientId String?       @db.Uuid
+  client   ClientProfile? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([scope])
+  @@index([clientId])
+  @@index([goalTag])
+  @@map("nutrition_tips")
+}
+
+model MealIdea {
+  id String @id @default(uuid()) @db.Uuid
+
+  title       String
+  description String?  @db.Text
+  mealType    MealType
+  tags        String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([mealType])
+  @@map("meal_ideas")
 }
 
 model InviteCode {

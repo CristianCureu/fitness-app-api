@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCheckinDto } from './dto/create-checkin.dto';
 import dayjs from 'dayjs';
@@ -10,6 +10,8 @@ dayjs.extend(timezone);
 
 @Injectable()
 export class CheckinsService {
+  private readonly logger = new Logger(CheckinsService.name);
+
   constructor(private prisma: PrismaService) {}
 
   /**
@@ -17,12 +19,16 @@ export class CheckinsService {
    * CLIENT only
    */
   async upsertTodayCheckin(userId: string, dto: CreateCheckinDto) {
+    this.logger.log(
+      `upsertTodayCheckin userId=${userId} nutritionScore=${dto.nutritionScore ?? 'n/a'} painAtTraining=${dto.painAtTraining ?? 'n/a'}`,
+    );
     // Get client profile
     const clientProfile = await this.prisma.clientProfile.findUnique({
       where: { userId },
     });
 
     if (!clientProfile) {
+      this.logger.warn(`upsertTodayCheckin missing client profile userId=${userId}`);
       throw new NotFoundException('Client profile not found');
     }
 
@@ -43,24 +49,26 @@ export class CheckinsService {
     });
 
     if (existing) {
+      this.logger.log(`upsertTodayCheckin update checkinId=${existing.id}`);
       // Update existing checkin
       return this.prisma.dailyCheckin.update({
         where: { id: existing.id },
         data: {
-          nutritionScore: dto.nutritionScore,
-          painAtTraining: dto.painAtTraining,
-          note: dto.note,
+          nutritionScore: dto.nutritionScore ?? existing.nutritionScore,
+          painAtTraining: dto.painAtTraining ?? existing.painAtTraining,
+          note: dto.note ?? existing.note,
         },
       });
     }
 
+    this.logger.log(`upsertTodayCheckin create clientId=${clientProfile.id}`);
     // Create new checkin
     return this.prisma.dailyCheckin.create({
       data: {
         clientId: clientProfile.id,
         date: todayStart,
-        nutritionScore: dto.nutritionScore,
-        painAtTraining: dto.painAtTraining,
+        nutritionScore: dto.nutritionScore ?? 0,
+        painAtTraining: dto.painAtTraining ?? false,
         note: dto.note,
       },
     });
@@ -70,11 +78,13 @@ export class CheckinsService {
    * Get checkins for a client with optional date range
    */
   async findAll(userId: string, startDate?: string, endDate?: string) {
+    this.logger.log(`findAll userId=${userId} start=${startDate || '-'} end=${endDate || '-'}`);
     const clientProfile = await this.prisma.clientProfile.findUnique({
       where: { userId },
     });
 
     if (!clientProfile) {
+      this.logger.warn(`findAll missing client profile userId=${userId}`);
       throw new NotFoundException('Client profile not found');
     }
 
