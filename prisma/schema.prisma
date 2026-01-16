@@ -97,6 +97,11 @@ model ClientProfile {
   firstName String
   lastName  String
   timezone  String @default("UTC") // IANA timezone (e.g., "America/New_York")
+  pushToken            String?
+  pushEnabled          Boolean  @default(false)
+  pushSessionReminders Boolean  @default(true)
+  pushDailyTips        Boolean  @default(true)
+  pushWeeklyMessage    Boolean  @default(true)
 
   // Physical attributes
   age    Int?
@@ -201,9 +206,6 @@ model DailyCheckin {
   client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   date           DateTime
-  nutritionScore Int // slider 0–10
-  painAtTraining Boolean
-  note           String?
 
   createdAt DateTime @default(now())
 

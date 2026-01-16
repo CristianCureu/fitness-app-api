@@ -16,6 +16,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateClientProfileDto } from './dto/create-client-profile.dto';
 import { UpdateClientProfileDto } from './dto/update-client-profile.dto';
+import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 import { GetClientsQueryDto } from './dto/get-clients-query.dto';
 import { AssignProgramDto } from './dto/assign-program.dto';
 import { UpdateTrainingDaysDto } from './dto/update-training-days.dto';
@@ -61,6 +62,19 @@ export class ClientsController {
   @Roles(UserRole.CLIENT)
   async getMyProfile(@CurrentUser() user: AppUser) {
     return this.clientsService.getMyProfile(user.id);
+  }
+
+  /**
+   * Update client's own profile
+   * CLIENT only
+   */
+  @Patch('me/profile')
+  @Roles(UserRole.CLIENT)
+  async updateMyProfile(
+    @CurrentUser() user: AppUser,
+    @Body() dto: UpdateMyProfileDto,
+  ) {
+    return this.clientsService.updateMyProfile(user.id, dto);
   }
 
   /**

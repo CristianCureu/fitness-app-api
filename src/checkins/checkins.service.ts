@@ -19,9 +19,7 @@ export class CheckinsService {
    * CLIENT only
    */
   async upsertTodayCheckin(userId: string, dto: CreateCheckinDto) {
-    this.logger.log(
-      `upsertTodayCheckin userId=${userId} nutritionScore=${dto.nutritionScore ?? 'n/a'} painAtTraining=${dto.painAtTraining ?? 'n/a'}`,
-    );
+    this.logger.log(`upsertTodayCheckin userId=${userId}`);
     // Get client profile
     const clientProfile = await this.prisma.clientProfile.findUnique({
       where: { userId },
@@ -50,15 +48,7 @@ export class CheckinsService {
 
     if (existing) {
       this.logger.log(`upsertTodayCheckin update checkinId=${existing.id}`);
-      // Update existing checkin
-      return this.prisma.dailyCheckin.update({
-        where: { id: existing.id },
-        data: {
-          nutritionScore: dto.nutritionScore ?? existing.nutritionScore,
-          painAtTraining: dto.painAtTraining ?? existing.painAtTraining,
-          note: dto.note ?? existing.note,
-        },
-      });
+      return existing;
     }
 
     this.logger.log(`upsertTodayCheckin create clientId=${clientProfile.id}`);
@@ -67,9 +57,6 @@ export class CheckinsService {
       data: {
         clientId: clientProfile.id,
         date: todayStart,
-        nutritionScore: dto.nutritionScore ?? 0,
-        painAtTraining: dto.painAtTraining ?? false,
-        note: dto.note,
       },
     });
   }

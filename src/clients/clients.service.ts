@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientProfileDto } from './dto/create-client-profile.dto';
 import { UpdateClientProfileDto } from './dto/update-client-profile.dto';
+import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 import { GetClientsQueryDto } from './dto/get-clients-query.dto';
 import { AssignProgramDto } from './dto/assign-program.dto';
 import { UpdateTrainingDaysDto } from './dto/update-training-days.dto';
@@ -289,6 +290,29 @@ export class ClientsService {
           },
         },
       },
+    });
+  }
+
+  /**
+   * Update the authenticated client's own profile
+   * CLIENT only
+   */
+  async updateMyProfile(userId: string, dto: UpdateMyProfileDto) {
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!clientProfile) {
+      throw new NotFoundException('Client profile not found');
+    }
+
+    if (dto.status && dto.status !== 'COMPLETED') {
+      throw new ForbiddenException('Client can only mark objective as completed');
+    }
+
+    return this.prisma.clientProfile.update({
+      where: { id: clientProfile.id },
+      data: dto,
     });
   }
 

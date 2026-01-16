@@ -181,29 +181,8 @@ export class ProgramRecommendationService {
     // Calculate consistency (sessions per week)
     const consistency = totalSessions / 4; // avg sessions per week
 
-    // Get check-ins from last 4 weeks
-    const recentCheckins = await this.prisma.dailyCheckin.findMany({
-      where: {
-        clientId,
-        date: {
-          gte: fourWeeksAgo,
-          lte: now,
-        },
-      },
-    });
-
-    const painFrequency =
-      recentCheckins.length > 0
-        ? (recentCheckins.filter((c) => c.painAtTraining).length /
-          recentCheckins.length) *
-        100
-        : 0;
-
-    const avgNutritionScore =
-      recentCheckins.length > 0
-        ? recentCheckins.reduce((sum, c) => sum + c.nutritionScore, 0) /
-        recentCheckins.length
-        : 0;
+    const painFrequency = -1;
+    const avgNutritionScore = 0;
 
     return {
       completionRate,
@@ -373,6 +352,9 @@ export class ProgramRecommendationService {
     reasons: string[],
     warnings: string[],
   ): number {
+    if (painFrequency < 0) {
+      return 0.5;
+    }
     if (painFrequency === 0) {
       reasons.push('Nicio durere raportată - recovery excelent');
       return 1.0;

@@ -7,6 +7,7 @@ import {
   IsDateString,
   Min,
   Max,
+  IsBoolean,
 } from 'class-validator';
 import { ClientStatus } from '@prisma/client';
 
@@ -23,6 +24,26 @@ export class CreateClientProfileDto {
   @IsOptional()
   @IsString()
   timezone?: string;
+
+  @IsOptional()
+  @IsString()
+  pushToken?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  pushEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  pushSessionReminders?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  pushDailyTips?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  pushWeeklyMessage?: boolean;
 
   @IsOptional()
   @IsInt()
