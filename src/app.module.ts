@@ -22,6 +22,7 @@ import { AiModule } from './ai/ai.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      ignoreEnvFile: process.env.NODE_ENV !== 'development',
     }),
     PrismaModule,
     SupabaseModule,
