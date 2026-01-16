@@ -12,20 +12,17 @@ RUN pnpm prisma generate
 COPY nest-cli.json tsconfig*.json ./
 COPY src ./src
 RUN pnpm build
+RUN pnpm prune --prod
 
 FROM node:20-slim AS runtime
 
 WORKDIR /app
 ENV NODE_ENV=production
-RUN corepack enable
-
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile
 
 COPY prisma ./prisma
 
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 
 EXPOSE 3000
 CMD ["node", "dist/main"]
