@@ -17,6 +17,7 @@ import { ProgramsModule } from './programs/programs.module';
 import { OnboardingCompletedGuard } from './common/guards/onboarding-completed.guard';
 import { ExercisesModule } from './exercises/exercises.module';
 import { AiModule } from './ai/ai.module';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -40,7 +41,7 @@ import { AiModule } from './ai/ai.module';
     ExercisesModule,
     AiModule,
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,
