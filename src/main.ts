@@ -31,6 +31,9 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT) || 3000;
+  await app.listen(port, '0.0.0.0');
+  // Log the bound port for easier Railway debugging.
+  console.log(`Listening on ${port}`);
 }
 bootstrap();
